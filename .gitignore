@@ -1,0 +1,27 @@
+# 构建产物
+/target/
+
+# IDE / 编辑器
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+.Spotlight-V100
+.Trashes
+
+# 第三方工具
+.arts/
+.codeartsdoer/
+.trae/
+.cursor/
+
+# 临时文件
+*.bak
+*.tmp
+*.log
