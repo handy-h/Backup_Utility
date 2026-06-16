@@ -10,9 +10,6 @@ mod ui;
 use app::BackupApp;
 use eframe::egui;
 
-/// 嵌入中文字体子集（Noto Sans SC Subset）
-const FONT_BYTES: &[u8] = include_bytes!("../assets/NotoSansSC-Subset.ttf");
-
 fn main() -> eframe::Result<()> {
     // 初始化日志
     tracing_subscriber::fmt::init();
@@ -36,29 +33,76 @@ fn main() -> eframe::Result<()> {
     )
 }
 
-/// 配置中文字体
+/// 配置中文字体 — 运行时从系统加载，避免嵌入二进制
 fn setup_fonts(ctx: &egui::Context) {
     let mut fonts = egui::FontDefinitions::default();
 
-    // 注册中文字体
-    fonts.font_data.insert(
-        "noto_sans_sc_subset".to_owned(),
-        std::sync::Arc::new(egui::FontData::from_static(FONT_BYTES)),
-    );
+    // 尝试加载系统自带的中文字体（Windows 常见路径）
+    let system_font_paths = [
+        // Windows
+        "C:\\Windows\\Fonts\\msyh.ttc",      // 微软雅黑
+        "C:\\Windows\\Fonts\\msyhbd.ttc",  // 微软雅黑粗体
+        "C:\\Windows\\Fonts\\simsun.ttc",  // 宋体
+        "C:\\Windows\\Fonts\\simhei.ttf",  // 黑体
+        // macOS
+        "/System/Library/Fonts/PingFang.ttc",
+        "/System/Library/Fonts/STHeiti Light.ttc",
+        "/Library/Fonts/Arial Unicode.ttf",
+        // Linux
+        "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+    ];
 
-    // 将中文字体添加到 Proportional 字体族的末尾（作为回退）
-    fonts
-        .families
-        .entry(egui::FontFamily::Proportional)
-        .or_default()
-        .push("noto_sans_sc_subset".to_owned());
+    let mut loaded = false;
+    for path in &system_font_paths {
+        if let Ok(font_data) = std::fs::read(path) {
+            let name = format!("system_cjk_{}", loaded);
+            fonts.font_data.insert(
+                name.clone(),
+                std::sync::Arc::new(egui::FontData::from_owned(font_data)),
+            );
+            fonts
+                .families
+                .entry(egui::FontFamily::Proportional)
+                .or_default()
+                .push(name.clone());
+            fonts
+                .families
+                .entry(egui::FontFamily::Monospace)
+                .or_default()
+                .push(name);
+            loaded = true;
+            tracing::info!("加载系统字体: {}", path);
+            break; // 加载一个就够了
+        }
+    }
 
-    // 将中文字体添加到 Monospace 字体族的末尾（作为回退）
-    fonts
-        .families
-        .entry(egui::FontFamily::Monospace)
-        .or_default()
-        .push("noto_sans_sc_subset".to_owned());
+    // 如果系统字体都失败，回退到嵌入字体（开发/便携场景）
+    if !loaded {
+        #[cfg(feature = "embedded-font")]
+        {
+            const FONT_BYTES: &[u8] = include_bytes!("../assets/NotoSansSC-Subset.ttf");
+            fonts.font_data.insert(
+                "noto_sans_sc_subset".to_owned(),
+                std::sync::Arc::new(egui::FontData::from_static(FONT_BYTES)),
+            );
+            fonts
+                .families
+                .entry(egui::FontFamily::Proportional)
+                .or_default()
+                .push("noto_sans_sc_subset".to_owned());
+            fonts
+                .families
+                .entry(egui::FontFamily::Monospace)
+                .or_default()
+                .push("noto_sans_sc_subset".to_owned());
+            tracing::warn!("未找到系统字体，使用嵌入字体回退");
+        }
+        #[cfg(not(feature = "embedded-font"))]
+        {
+            tracing::warn!("未找到系统字体，界面可能显示为方框或乱码");
+        }
+    }
 
     ctx.set_fonts(fonts);
 }

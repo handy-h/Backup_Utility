@@ -144,9 +144,8 @@ impl eframe::App for BackupApp {
             ctx.request_repaint();
         }
 
-        // 主布局
-        egui::CentralPanel::default().show(ctx, |ui| {
-            // 顶部标题栏
+        // 顶部标题栏（固定）
+        egui::TopBottomPanel::top("top_bar").show(ctx, |ui| {
             ui.add_space(4.0);
             ui.horizontal(|ui| {
                 ui.heading(
@@ -162,10 +161,55 @@ impl eframe::App for BackupApp {
                 });
             });
             ui.add_space(4.0);
-            ui.separator();
-            ui.add_space(6.0);
+        });
 
-            // 可滚动内容区
+        // 底部操作栏（固定）
+        egui::TopBottomPanel::bottom("bottom_bar").show(ctx, |ui| {
+            ui.separator();
+            ui.add_space(4.0);
+            ui.horizontal(|ui| {
+                // 主操作按钮
+                let backup_btn = egui::Button::new(
+                    egui::RichText::new("开始备份").strong().color(egui::Color32::WHITE),
+                )
+                .fill(egui::Color32::from_rgb(46, 125, 50))
+                .rounding(egui::Rounding::same(6.0))
+                .min_size(egui::vec2(120.0, 32.0));
+
+                if ui
+                    .add_enabled(!self.is_running, backup_btn)
+                    .clicked()
+                {
+                    self.start_backup();
+                }
+
+                let save_btn = egui::Button::new(
+                    egui::RichText::new("保存配置").strong(),
+                )
+                .rounding(egui::Rounding::same(6.0))
+                .min_size(egui::vec2(110.0, 32.0));
+
+                if ui.add(save_btn).clicked() {
+                    self.save_config();
+                }
+
+                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                    let clear_btn = egui::Button::new(
+                        egui::RichText::new("清空日志"),
+                    )
+                    .rounding(egui::Rounding::same(6.0))
+                    .min_size(egui::vec2(100.0, 32.0));
+
+                    if ui.add(clear_btn).clicked() {
+                        self.clear_logs();
+                    }
+                });
+            });
+            ui.add_space(4.0);
+        });
+
+        // 中央内容区（可滚动）
+        egui::CentralPanel::default().show(ctx, |ui| {
             egui::ScrollArea::vertical().show(ui, |ui| {
                 // 1. 备份条目列表
                 entry_list::render_entry_list(
@@ -188,12 +232,10 @@ impl eframe::App for BackupApp {
                 // 3. 路径设置
                 settings::render_path_settings(ui, &mut self.config);
 
-                // 4 & 5. 日志/进度面板（操作按钮在底部固定栏）
+                // 4 & 5. 日志/进度面板
+                ui.add_space(10.0);
                 progress::render_progress(ui, &self.logs, &self.backup_status);
             });
-
-            // 底部操作按钮（固定在底部）
-            render_bottom_bar(ui, self);
         });
 
         // 关闭前自动保存配置
@@ -201,48 +243,4 @@ impl eframe::App for BackupApp {
             let _ = save_config(&self.config);
         }
     }
-}
-
-/// 底部固定操作栏
-fn render_bottom_bar(ui: &mut egui::Ui, app: &mut BackupApp) {
-    ui.separator();
-    ui.add_space(4.0);
-    ui.horizontal(|ui| {
-        // 主操作按钮
-        let backup_btn = egui::Button::new(
-            egui::RichText::new("开始备份").strong().color(egui::Color32::WHITE),
-        )
-        .fill(egui::Color32::from_rgb(46, 125, 50))
-        .rounding(egui::Rounding::same(6.0))
-        .min_size(egui::vec2(120.0, 32.0));
-
-        if ui
-            .add_enabled(!app.is_running, backup_btn)
-            .clicked()
-        {
-            app.start_backup();
-        }
-
-        let save_btn = egui::Button::new(
-            egui::RichText::new("保存配置").strong(),
-        )
-        .rounding(egui::Rounding::same(6.0))
-        .min_size(egui::vec2(110.0, 32.0));
-
-        if ui.add(save_btn).clicked() {
-            app.save_config();
-        }
-
-        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-            let clear_btn = egui::Button::new(
-                egui::RichText::new("清空日志"),
-            )
-            .rounding(egui::Rounding::same(6.0))
-            .min_size(egui::vec2(100.0, 32.0));
-
-            if ui.add(clear_btn).clicked() {
-                app.clear_logs();
-            }
-        });
-    });
 }

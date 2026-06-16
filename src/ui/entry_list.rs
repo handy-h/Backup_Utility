@@ -65,14 +65,25 @@ pub fn render_entry_list(
         ui.add_space(4.0);
 
         if entries.is_empty() {
-            ui.add_space(16.0);
+            // 空状态美化
+            ui.add_space(20.0);
             ui.vertical_centered(|ui| {
                 ui.colored_label(
-                    egui::Color32::GRAY,
-                    egui::RichText::new("暂无备份条目，点击上方按钮添加").size(14.0),
+                    egui::Color32::from_rgb(180, 180, 180),
+                    egui::RichText::new("📦").size(32.0),
+                );
+                ui.add_space(8.0);
+                ui.colored_label(
+                    egui::Color32::from_rgb(150, 150, 150),
+                    egui::RichText::new("暂无备份条目").size(14.0).strong(),
+                );
+                ui.add_space(4.0);
+                ui.colored_label(
+                    egui::Color32::from_rgb(160, 160, 160),
+                    egui::RichText::new("点击上方按钮添加文件、目录或 Git 仓库").size(12.0),
                 );
             });
-            ui.add_space(12.0);
+            ui.add_space(16.0);
         } else {
             // 表头 — 5 列：类型 | 源路径 | 分支 | 包内名称 | 操作
             egui::Grid::new("entry_grid")

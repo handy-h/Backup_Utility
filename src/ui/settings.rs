@@ -13,7 +13,6 @@ pub struct EditState {
     pub password_buffer: String,
 }
 
-
 /// 渲染压缩设置面板
 pub fn render_compression_settings(
     ui: &mut egui::Ui,

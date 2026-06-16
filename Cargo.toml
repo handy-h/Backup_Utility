@@ -3,8 +3,21 @@ name = "backup_utility"
 version = "0.1.0"
 edition = "2024"
 
+[features]
+default = []
+# 嵌入字体（用于便携/无系统字体环境，会增加 ~0.2MB 二进制大小）
+embedded-font = []
+
+[profile.release]
+# 优化二进制大小
+opt-level = "z"      # 极致优化大小
+lto = true           # 链接时优化
+strip = true         # 剥离符号
+panic = "abort"      # 移除 panic 展开代码
+codegen-units = 1    # 单代码生成单元，更优优化
+
 [dependencies]
-eframe = "0.30"
+eframe = { version = "0.30", default-features = false, features = ["default_fonts", "glow"] }
 rfd = "0.15"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
