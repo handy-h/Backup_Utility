@@ -137,6 +137,11 @@ fn compress_7z(
         cmd.arg("-mhe=off");
     }
 
+    // 完整性验证 (SHA256)
+    if config.password.is_some() {
+        cmd.arg("-scrcSHA256");
+    }
+
     // 排除项
     cmd.arg("-xr!.DS_Store")
         .arg("-xr!Thumbs.db")

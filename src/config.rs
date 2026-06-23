@@ -154,6 +154,14 @@ pub struct BackupConfig {
     pub encrypt_filenames: bool,
     /// 输出文件名模板，{date} 会被替换为日期
     pub output_filename_pattern: String,
+    /// 项目备份配置 - 源路径
+    pub project_backup_source: PathBuf,
+    /// 项目备份配置 - 目标路径
+    pub project_backup_target: PathBuf,
+    /// 项目备份配置 - 压缩包名称
+    pub project_backup_archive_name: String,
+    /// 项目备份 - 用户自定义排除模式（目录/文件名，匹配任意路径组件）
+    pub project_exclude_patterns: Vec<String>,
 }
 
 impl Default for BackupConfig {
@@ -168,6 +176,10 @@ impl Default for BackupConfig {
             password: None,
             encrypt_filenames: true,
             output_filename_pattern: "backup{date}".to_string(),
+            project_backup_source: std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")),
+            project_backup_target: default_output_dir(),
+            project_backup_archive_name: "project-backup".to_string(),
+            project_exclude_patterns: Vec::new(),
         }
     }
 }
@@ -184,7 +196,7 @@ fn default_temp_dir() -> PathBuf {
 }
 
 /// 获取默认输出目录
-fn default_output_dir() -> PathBuf {
+pub fn default_output_dir() -> PathBuf {
     dirs::document_dir()
         .unwrap_or_else(|| PathBuf::from("."))
         .join("backup")

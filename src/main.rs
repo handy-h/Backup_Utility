@@ -3,9 +3,12 @@
 mod app;
 mod backup_entry;
 mod backup_runner;
+mod builder;
 mod compressor;
 mod config;
+mod project_backup;
 mod ui;
+mod validation;
 
 use app::BackupApp;
 use eframe::egui;

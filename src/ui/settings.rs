@@ -11,6 +11,8 @@ pub struct EditState {
     pub editing_index: Option<usize>,
     /// 密码输入缓冲区
     pub password_buffer: String,
+    /// 项目排除模式输入缓冲区
+    pub exclude_buffer: String,
 }
 
 /// 渲染压缩设置面板
